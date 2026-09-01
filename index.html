@@ -84,6 +84,8 @@
   .finding{border-top:1px solid var(--line); padding:9px 16px; font-size:13.5px; display:flex; gap:8px; align-items:flex-start;}
   .finding .loc{flex:none; color:var(--sub); font-size:12px; padding-top:2px; min-width:88px;}
   .finding .quote{color:#92400e; background:var(--mid-bg); border-radius:5px; padding:0 6px; font-family:"SF Mono",Menlo,monospace; font-size:12px; word-break:break-all;}
+  .delbtn{margin-left:auto; flex:none; background:#fff; border:1px solid #fecaca; color:var(--high); border-radius:6px; padding:2px 10px; font-size:12px; cursor:pointer;}
+  .delbtn:hover{background:var(--high-bg);}
   .empty{color:var(--sub); font-size:13.5px; padding:12px 16px;}
   .wscol{display:flex; gap:12px; flex-wrap:wrap;}
   .wscol>div{flex:1 1 340px; min-width:0;}
@@ -118,7 +120,7 @@
         <h3 style="margin-top:0;">① 粘贴说明书全文</h3>
         <textarea id="wsText" class="ws-textarea" placeholder="粘贴抽取后的说明书文本：&#10;- 技能脚本输出格式：[P#]段落 与 ===TABLE#N=== / T#N R#M 表格行，可自动识别章节；&#10;- 也可以是任意纯文本（用行号定位）。&#10;支持上传 .txt / .docx / .xlsx 文件。"></textarea>
         <div class="ws-hint">
-          支持：.txt（直接读入）｜.docx（浏览器解析段落+表格）｜.xlsx（逐表勾稽资产负债表/现金流量表）｜.pdf（提取文本层；无文本层的扫描件页可勾选下方 OCR 识别）。<br>
+          支持：.txt / .docx / .xlsx / .pdf（上传后文本框只显示文件名标记，文件内容在下方「已加载文件」面板，点击「运行扫描」逐文件检查）。<br>
           老版 .doc / 扫描 PDF 请先命令行转换后粘贴：<code>textutil -convert txt "文件.doc" -stdout</code>；PDF 扫描件也可用网页 OCR。<br>
           <label style="cursor:pointer; color:var(--brand);"><b>＋ 选择文件</b><input id="wsFile" type="file" accept=".txt,.docx,.xlsx,.pdf" multiple style="display:none;"></label>
           ｜ <a href="#" id="wsSample" style="color:var(--brand);">填入示例</a>
@@ -143,6 +145,7 @@
       <button class="ws-btn ghost" id="wsClaude">生成 Claude 深核提示词</button>
       <span id="wsStatus" style="font-size:13px;color:var(--sub);"></span>
     </div>
+    <div id="wsFiles" style="display:none;margin-top:12px;" class="fgroup"><div style="padding:11px 16px;font-weight:600;font-size:14px;border-bottom:1px solid var(--line);">已加载文件（点击「运行扫描」开始检查）</div></div>
     <div id="wsResults" style="margin-top:14px;"></div>
   </div>
 </section>
@@ -347,6 +350,10 @@ function parseTextDoc(name, text){
   doc.lines.forEach(function(L){
     if(L.type!=='p') return;
     var t = L.text || L.raw;
+    var mm = t.match(/^===PAGE#(\d+)===$/);
+    if(mm){ doc.chapters.push({line:L.line, title:'第'+mm[1]+'页'}); return; }
+    var mf = t.match(/^===FILE:(.*)===$/);
+    if(mf){ doc.chapters.push({line:L.line, title:'文件：'+mf[1].slice(0,40)}); return; }
     var m2 = t.match(/^(第[一二三四五六七八九十百]+章)\s*(.{0,50})/);
     if(m2 && m2[2].length>0){ doc.chapters.push({line:L.line, title:m2[1]+' '+m2[2].trim().slice(0,30)}); }
     else if(/^释义\s*$/.test(t.trim())){ doc.chapters.push({line:L.line, title:'释义'}); }
@@ -360,7 +367,7 @@ function parseTextDoc(name, text){
   return doc;
 }
 
-/* docx → HTML（mammoth），再解析成段落+表格 */
+/* docx → HTML（mammoth），再转成段落+表格文本（返回原始文本，由调用方填入文本框） */
 function parseDocxHtml(name, html){
   var root = new DOMParser().parseFromString(html, 'text/html');
   var out = [];
@@ -387,7 +394,7 @@ function parseDocxHtml(name, html){
     });
   }
   walk(root.body || root);
-  return parseTextDoc(name, out.join('\n'));
+  return out.join('\n');
 }
 
 /* xlsx → 每 sheet 一个二维表 */
@@ -425,7 +432,11 @@ var tesseractReady = null;
 function loadTesseract(){
   if(tesseractReady) return tesseractReady;
   tesseractReady = new Promise(function(res, rej){
-    loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js',
+    loadScripts([
+      'https://registry.npmmirror.com/tesseract.js/5.1.1/files/dist/tesseract.min.js',
+      'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js',
+      'https://unpkg.com/tesseract.js@5.1.1/dist/tesseract.min.js'
+    ],
       function(){ res(); },
       function(){ rej(new Error('OCR 库加载失败（需联网）')); });
   });
@@ -468,7 +479,7 @@ function extractPdf(name, pdf){
     } else if(scanned.length){
       status.textContent = name+': 有 '+scanned.length+' 页为扫描件（无文本层），勾选"PDF 扫描件页启用 OCR"后重新上传可识别';
     }
-    return makePdfDoc(name, pages);
+    return pages.join('\n');
   })();
 }
 
@@ -653,7 +664,7 @@ function runScan(){
       var termPairs = loadPairs('ard-term-pairs', TERM_PAIRS_DEFAULT);
       var findings = [];
       var docs = [];
-      var txt = $('wsText').value;
+      var txt = $('wsText').value.split('\n').filter(function(l){ return !/^===FILE:.*===$/.test(l.trim()); }).join('\n');
       if(txt.trim()) docs.push(parseTextDoc('粘贴文本', txt));
       uploads.forEach(function(u){ docs.push(u); });
       docs.forEach(function(doc){
@@ -740,10 +751,13 @@ function copyText(text, btn, okText){
    文件上传（.txt / .docx / .xlsx）
 ============================================================ */
 var uploads = [];
-function loadScript(src, onok, onerr){
+/* 依次尝试多个 CDN（国内镜像优先），全部失败才报错 */
+function loadScripts(urls, onok, onerr){
+  if(!urls.length){ if(onerr) onerr(); return; }
   var s = document.createElement('script');
-  s.src = src;
-  s.onload = onok; s.onerror = onerr || function(){};
+  s.src = urls[0];
+  s.onload = function(){ onok && onok(0); };
+  s.onerror = function(){ loadScripts(urls.slice(1), onok, onerr); };
   document.head.appendChild(s);
 }
 $('wsFile').addEventListener('change', function(ev){
@@ -751,7 +765,15 @@ $('wsFile').addEventListener('change', function(ev){
   var status = $('wsStatus');
   status.textContent = '正在读取 '+files.length+' 个文件…';
   var pending = files.length;
-  function done(){ pending--; if(pending===0){ status.textContent = '读取完成，点击"运行扫描"'; } }
+  function appendMarker(name){
+    var line = '===FILE:'+name+'===';
+    $('wsText').value = $('wsText').value.trim() ? $('wsText').value + '\n' + line : line;
+  }
+  function done(){
+    pending--;
+    renderFileList();
+    if(pending===0) status.textContent = '读取完成：文件已加载（见下方「已加载文件」面板），点击「运行扫描」执行检查';
+  }
   files.forEach(function(f){
     var reader = new FileReader();
     reader.onload = function(){
@@ -759,29 +781,43 @@ $('wsFile').addEventListener('change', function(ev){
       try{
         if(/\.txt$/i.test(name)){
           var text = new TextDecoder('utf-8').decode(data);
-          if($('wsText').value.trim()) $('wsText').value += '\n\n===FILE:'+name+'===\n'+text;
-          else $('wsText').value = text;
+          uploads.push(parseTextDoc(name, text));
+          appendMarker(name);
           done();
         } else if(/\.docx$/i.test(name)){
-          loadScript('https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js', function(){
+          loadScripts([
+            'https://registry.npmmirror.com/mammoth/1.8.0/files/mammoth.browser.min.js',
+            'https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js',
+            'https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js'
+          ], function(){
             mammoth.convertToHtml({arrayBuffer:data}).then(function(res){
-              uploads.push(parseDocxHtml(name, res.value));
+              uploads.push(parseTextDoc(name, parseDocxHtml(name, res.value)));
+              appendMarker(name);
               done();
             }).catch(function(){ status.textContent = name+' 解析失败'; done(); });
           }, function(){ status.textContent = 'docx 解析库加载失败（需联网），请改用 python 脚本抽取后粘贴 txt'; done(); });
         } else if(/\.xlsx$/i.test(name)){
-          loadScript('https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js', function(){
+          loadScripts([
+            'https://registry.npmmirror.com/xlsx/0.18.5/files/dist/xlsx.full.min.js',
+            'https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js',
+            'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'
+          ], function(){
             var wb = XLSX.read(new Uint8Array(data), {type:'array'});
             uploads.push(parseXlsx(name, wb));
             done();
           }, function(){ status.textContent = 'xlsx 解析库加载失败（需联网），请改用 python 脚本抽取后粘贴'; done(); });
         } else if(/\.pdf$/i.test(name)){
-          loadScript('https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js', function(){
+          loadScripts([
+            'https://registry.npmmirror.com/pdfjs-dist/3.11.174/files/build/pdf.min.js',
+            'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js',
+            'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js'
+          ], function(){
             try{
               pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
               pdfjsLib.getDocument({data:new Uint8Array(data)}).promise.then(function(pdf){
-                extractPdf(name, pdf).then(function(doc){
-                  uploads.push(doc);
+                extractPdf(name, pdf).then(function(raw){
+                  uploads.push(parseTextDoc(name, raw));
+                  appendMarker(name);
                   done();
                 }).catch(function(err){ status.textContent = name+' 解析失败：'+err.message; done(); });
               }).catch(function(err){ status.textContent = name+' 无法打开（可能已加密或损坏）：'+err.message; done(); });
@@ -794,6 +830,34 @@ $('wsFile').addEventListener('change', function(ev){
   });
   ev.target.value = '';
 });
+
+/* 已加载文件面板（xlsx 不填入文本框，只在这里显示） */
+function renderFileList(){
+  var el = $('wsFiles');
+  if(!uploads.length){ el.style.display = 'none'; el.innerHTML = ''; return; }
+  var html = '';
+  uploads.forEach(function(u, idx){
+    var info;
+    if(u.xlsx){
+      info = esc(u.name)+' · Excel 工作簿，'+u.sheets.length+' 个表：'+u.sheets.map(function(s){ return esc(s.name); }).join('、')+'（勾稽检查将逐表执行）';
+    } else {
+      info = esc(u.name)+' · 文本 '+u.lines.length+' 行';
+    }
+    html += '<div class="finding"><span class="sev sev-low">已载入</span><span style="flex:1;">'+info+'</span><button class="delbtn" data-idx="'+idx+'">删除</button></div>';
+  });
+  el.innerHTML = html;
+  el.style.display = '';
+  Array.prototype.forEach.call(el.querySelectorAll('.delbtn'), function(btn){
+    btn.addEventListener('click', function(){
+      var i = parseInt(btn.dataset.idx, 10);
+      var u = uploads[i];
+      uploads.splice(i, 1);
+      $('wsText').value = $('wsText').value.split('\n').filter(function(l){ return l.trim() !== '===FILE:'+u.name+'==='; }).join('\n');
+      renderFileList();
+      $('wsStatus').textContent = '已删除：'+u.name+'（点击「运行扫描」重新检查）';
+    });
+  });
+}
 
 /* 示例数据 */
 $('wsSample').addEventListener('click', function(e){
@@ -824,7 +888,7 @@ $('wsSample').addEventListener('click', function(e){
     '[P5] 次级证券除非根据生效判决或裁定或计划管理人事先的书面同意不得转让的的。'
   ].join('\n');
 });
-$('wsClear').addEventListener('click', function(e){ e.preventDefault(); $('wsText').value=''; uploads=[]; $('wsResults').innerHTML=''; lastReport=''; $('wsStatus').textContent=''; });
+$('wsClear').addEventListener('click', function(e){ e.preventDefault(); $('wsText').value=''; uploads=[]; $('wsResults').innerHTML=''; renderFileList(); lastReport=''; $('wsStatus').textContent=''; });
 
 /* 运行与导出 */
 $('wsRun').addEventListener('click', runScan);
