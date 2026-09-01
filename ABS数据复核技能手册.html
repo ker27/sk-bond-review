@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ABS 募集说明书数据复核 · 手册 + 在线工作台</title>
+<style>
+  :root{
+    --bg:#f5f6f8; --card:#ffffff; --ink:#1f2430; --sub:#6b7280; --line:#e5e7eb;
+    --brand:#2563eb; --brand-bg:#eff4ff;
+    --high:#dc2626; --high-bg:#fef2f2; --mid:#d97706; --mid-bg:#fffbeb; --low:#2563eb; --low-bg:#eff6ff;
+    --ok:#059669; --ok-bg:#ecfdf5;
+    --radius:12px; --shadow:0 1px 3px rgba(15,23,42,.08);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--bg); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif; line-height:1.7; font-size:15px;}
+  .wrap{max-width:1040px; margin:0 auto; padding:24px 20px 80px;}
+  header{background:linear-gradient(135deg,#1e3a8a,#2563eb); color:#fff; border-radius:var(--radius); padding:34px 34px 28px; box-shadow:var(--shadow);}
+  header h1{font-size:24px; margin-bottom:10px;}
+  header .sub{opacity:.92; max-width:780px;}
+  header .meta{margin-top:14px; font-size:12.5px; opacity:.75;}
+  nav{position:sticky; top:8px; z-index:10; background:#fff; border:1px solid var(--line); border-radius:10px; margin:16px 0 4px; padding:10px 14px; display:flex; flex-wrap:wrap; gap:6px 14px; box-shadow:var(--shadow);}
+  nav a{color:var(--brand); text-decoration:none; font-size:13.5px; white-space:nowrap;}
+  nav a:hover{text-decoration:underline;}
+  section{margin-top:26px;}
+  h2{font-size:19px; margin-bottom:12px; padding-left:11px; border-left:4px solid var(--brand);}
+  h3{font-size:16px; margin:18px 0 8px; color:#111827;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px 22px; box-shadow:var(--shadow); margin-bottom:14px;}
+  .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px;}
+  .step{position:relative; padding-left:52px; min-height:70px;}
+  .step .num{position:absolute; left:0; top:2px; width:36px; height:36px; border-radius:50%; background:var(--brand-bg); color:var(--brand); font-weight:700; display:flex; align-items:center; justify-content:center;}
+  .step b{display:block; margin-bottom:2px;}
+  .step p{font-size:13.5px; color:var(--sub);}
+  .prompt-card{background:var(--brand-bg); border:1px solid #c7d8ff; border-radius:10px; padding:14px 16px; margin-bottom:10px;}
+  .prompt-card p{font-size:13.5px; color:#334155; margin-bottom:8px;}
+  code, pre{font-family:"SF Mono",Menlo,Consolas,"Courier New",monospace;}
+  .codeblock{position:relative; background:#0f172a; color:#e2e8f0; border-radius:10px; padding:14px 46px 14px 16px; font-size:13px; line-height:1.65; overflow-x:auto; white-space:pre;}
+  .copybtn{position:absolute; top:8px; right:8px; background:#334155; color:#cbd5e1; border:none; border-radius:6px; padding:3px 10px; font-size:12px; cursor:pointer;}
+  .copybtn:hover{background:#475569; color:#fff;}
+  .toolbar{display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:14px;}
+  .toolbar input[type=search]{flex:1 1 220px; border:1px solid var(--line); border-radius:8px; padding:8px 12px; font-size:14px; outline:none;}
+  .toolbar input[type=search]:focus{border-color:var(--brand);}
+  .toolbar button{background:#fff; border:1px solid var(--line); border-radius:8px; padding:8px 14px; font-size:13px; cursor:pointer;}
+  .toolbar button:hover{border-color:var(--brand); color:var(--brand);}
+  .progress{flex:1 1 100%; height:8px; background:#e5e7eb; border-radius:99px; overflow:hidden;}
+  .progress i{display:block; height:100%; width:0; background:linear-gradient(90deg,#059669,#10b981); border-radius:99px; transition:width .25s;}
+  .progress-text{font-size:12.5px; color:var(--sub); flex:1 1 100%;}
+  .group-head{display:flex; align-items:center; gap:10px; margin:20px 0 8px;}
+  .group-head h3{margin:0;}
+  .group-head .tag{font-size:12px; background:var(--brand-bg); color:var(--brand); border-radius:6px; padding:2px 9px; font-weight:600;}
+  .item{display:flex; align-items:flex-start; gap:10px; background:var(--card); border:1px solid var(--line); border-radius:9px; padding:10px 14px; margin-bottom:8px; font-size:14px;}
+  .item input{margin-top:4px; width:16px; height:16px; accent-color:var(--ok); flex:none; cursor:pointer;}
+  .item.done{background:var(--ok-bg); border-color:#a7f3d0;}
+  .item.done .txt{color:#065f46;}
+  .sev{display:inline-block; font-size:11.5px; font-weight:700; border-radius:5px; padding:1px 7px; margin-right:6px; vertical-align:1px;}
+  .sev-high{background:var(--high-bg); color:var(--high);}
+  .sev-mid{background:var(--mid-bg); color:var(--mid);}
+  .sev-low{background:var(--low-bg); color:var(--low);}
+  details{background:var(--card); border:1px solid var(--line); border-radius:10px; margin-bottom:10px; box-shadow:var(--shadow);}
+  details summary{cursor:pointer; padding:13px 18px; font-weight:600; font-size:14.5px; list-style:none;}
+  details summary::before{content:"▸ "; color:var(--brand);}
+  details[open] summary::before{content:"▾ ";}
+  details .body{padding:0 18px 16px; font-size:14px; color:#374151;}
+  details .body li{margin:6px 0 6px 18px;}
+  table{width:100%; border-collapse:collapse; background:#fff; border-radius:10px; overflow:hidden; box-shadow:var(--shadow); font-size:13.5px;}
+  th{background:#f1f5f9; text-align:left; padding:10px 12px; font-weight:600; white-space:nowrap;}
+  td{padding:10px 12px; border-top:1px solid var(--line); vertical-align:top;}
+  footer{margin-top:44px; text-align:center; color:var(--sub); font-size:12.5px;}
+  .hide{display:none !important;}
+  /* ===== 工作台 ===== */
+  .ws-btn{background:var(--brand); color:#fff; border:none; border-radius:8px; padding:10px 20px; font-size:14.5px; font-weight:600; cursor:pointer;}
+  .ws-btn:hover{filter:brightness(1.08);}
+  .ws-btn:disabled{background:#9ca3af; cursor:not-allowed;}
+  .ws-btn.ghost{background:#fff; color:var(--brand); border:1px solid var(--brand);}
+  .ws-btn.danger{background:#fff; color:var(--high); border:1px solid var(--high);}
+  .ws-textarea{width:100%; min-height:220px; border:1px solid var(--line); border-radius:10px; padding:12px 14px; font-family:"SF Mono",Menlo,Consolas,monospace; font-size:12.5px; line-height:1.6; resize:vertical; outline:none;}
+  .ws-textarea:focus{border-color:var(--brand);}
+  .ws-hint{font-size:12.5px; color:var(--sub); margin-top:8px;}
+  .stat-chips{display:flex; flex-wrap:wrap; gap:8px; margin:10px 0;}
+  .chip{background:#fff; border:1px solid var(--line); border-radius:99px; padding:4px 13px; font-size:12.5px; color:#374151;}
+  .chip b{color:var(--brand);}
+  .fgroup{background:var(--card); border:1px solid var(--line); border-radius:10px; margin-bottom:10px; box-shadow:var(--shadow); overflow:hidden;}
+  .fgroup>summary{padding:11px 16px; font-weight:600; font-size:14px;}
+  .finding{border-top:1px solid var(--line); padding:9px 16px; font-size:13.5px; display:flex; gap:8px; align-items:flex-start;}
+  .finding .loc{flex:none; color:var(--sub); font-size:12px; padding-top:2px; min-width:88px;}
+  .finding .quote{color:#92400e; background:var(--mid-bg); border-radius:5px; padding:0 6px; font-family:"SF Mono",Menlo,monospace; font-size:12px; word-break:break-all;}
+  .empty{color:var(--sub); font-size:13.5px; padding:12px 16px;}
+  .wscol{display:flex; gap:12px; flex-wrap:wrap;}
+  .wscol>div{flex:1 1 340px; min-width:0;}
+  @media print{nav,.toolbar,.copybtn,.ws-actions{display:none;} body{background:#fff;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>ABS 募集说明书数据复核 · 手册 + 在线工作台</h1>
+  <div class="sub">对照源文件复核 ABS 募集说明书全文：<b>每一段文字、每一张表</b>都要核。网页可自动跑机械检查（占位符/错别字/勾稽/术语），深度判定交给 Claude。</div>
+  <div class="meta">来源技能：/Users/ker/.claude/skills/abs-data-review · 生成于 2026-09-01 · 打勾进度与自定义规则保存在本机浏览器</div>
+</header>
+
+<nav>
+  <a href="#workspace">在线复核工作台</a>
+  <a href="#workflow">工作流五步</a>
+  <a href="#checklist">核对清单（可打勾）</a>
+  <a href="#pitfalls">关键坑</a>
+  <a href="#template">报告格式模板</a>
+  <a href="#cases">参考案例</a>
+  <a href="#commands">常用命令</a>
+</nav>
+
+<!-- ================= 在线复核工作台 ================= -->
+<section id="workspace">
+  <h2>在线复核工作台</h2>
+  <div class="card">
+    <div class="wscol">
+      <div>
+        <h3 style="margin-top:0;">① 粘贴说明书全文</h3>
+        <textarea id="wsText" class="ws-textarea" placeholder="粘贴抽取后的说明书文本：&#10;- 技能脚本输出格式：[P#]段落 与 ===TABLE#N=== / T#N R#M 表格行，可自动识别章节；&#10;- 也可以是任意纯文本（用行号定位）。&#10;支持上传 .txt / .docx / .xlsx 文件。"></textarea>
+        <div class="ws-hint">
+          支持：.txt（直接读入）｜.docx（浏览器解析段落+表格）｜.xlsx（逐表勾稽资产负债表/现金流量表）｜.pdf（提取文本层；无文本层的扫描件页可勾选下方 OCR 识别）。<br>
+          老版 .doc / 扫描 PDF 请先命令行转换后粘贴：<code>textutil -convert txt "文件.doc" -stdout</code>；PDF 扫描件也可用网页 OCR。<br>
+          <label style="cursor:pointer; color:var(--brand);"><b>＋ 选择文件</b><input id="wsFile" type="file" accept=".txt,.docx,.xlsx,.pdf" multiple style="display:none;"></label>
+          ｜ <a href="#" id="wsSample" style="color:var(--brand);">填入示例</a>
+          ｜ <a href="#" id="wsClear" style="color:var(--high);">清空</a>
+        </div>
+      </div>
+      <div>
+        <h3 style="margin-top:0;">② 扫描项目</h3>
+        <div class="item"><input type="checkbox" data-scan="ph" checked><span class="txt"><b>占位符扫描</b>：【】、截至，、截至202年末、增至/共亿元 等缺数字项</span></div>
+        <div class="item"><input type="checkbox" data-scan="typo" checked><span class="txt"><b>文字质量</b>：错别字词典、重复标点、数字粘连、供热/供水提示</span></div>
+        <div class="item"><input type="checkbox" data-scan="gouji" checked><span class="txt"><b>表内勾稽</b>：资产负债表（资产=负债+权益、合计项）、现金流量表（三净额=净增加、期初+净增加=期末）</span></div>
+        <div class="item"><input type="checkbox" data-scan="term" checked><span class="txt"><b>术语一致性</b>：同义变体同时出现（如《资产买卖协议》vs《基础资产买卖协议》）</span></div>
+        <div class="item" style="flex-wrap:wrap;"><span class="txt">自定义错别字（如 <code>届止|届至</code>）：</span><input id="custWrong" placeholder="错" style="width:88px;border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:13px;"><input id="custRight" placeholder="对" style="width:88px;border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:13px;"><button id="custAdd" style="background:#fff;border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;">添加</button><span class="txt" id="custList" style="font-size:12px;color:var(--sub);"></span></div>
+        <div class="item" style="flex-wrap:wrap;"><input type="checkbox" id="wsOcr"><span class="txt"><b>PDF 扫描件页启用 OCR</b>（识别无文本层的扫描页，较慢，需联网，首次需下载识别数据约 30MB）</span><span class="txt">页数上限 <input id="wsOcrMax" type="number" min="1" value="20" style="width:70px;border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:13px;"> 页（清空 = 全部识别）</span></div>
+        <div class="ws-hint">深度判定（数字谁对谁错、审计重述、跨文件核对）请把扫描结果交给 Claude —— 见 ④。</div>
+      </div>
+    </div>
+    <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;" class="ws-actions">
+      <button class="ws-btn" id="wsRun">🚀 运行扫描</button>
+      <button class="ws-btn ghost" id="wsExport">复制报告（Markdown）</button>
+      <button class="ws-btn ghost" id="wsDownload">下载报告 .md</button>
+      <button class="ws-btn ghost" id="wsClaude">生成 Claude 深核提示词</button>
+      <span id="wsStatus" style="font-size:13px;color:var(--sub);"></span>
+    </div>
+    <div id="wsResults" style="margin-top:14px;"></div>
+  </div>
+</section>
+
+<!-- ================= 工作流 ================= -->
+<section id="workflow">
+  <h2>工作流五步</h2>
+  <div class="card grid">
+    <div class="step"><div class="num">1</div><b>清点源文件</b><p>先 ls 源文件目录，弄清每份文件是什么：说明书本体（.docx，复核对象）、基础资产方财报（Excel）、增信/担保方财报（Excel 或审计报告 PDF + 半年报 Excel）、审计报告（.pdf，附注是金矿）、资料补充清单、现金流预测模型。</p></div>
+    <div class="step"><div class="num">2</div><b>抽取全部文档</b><p>用 scripts/ 下的脚本把每个文件转成可检索文本：说明书按段落 [P#]+表格 ===TABLE#N===，Excel 输出 坐标=值，PDF 用 pdfplumber。抽取后先通读目录，建立「第X章/X.X节 → 段落区间」定位表。说明书文本可直接粘贴到上方工作台跑机械扫描。</p></div>
+    <div class="step"><div class="num">3</div><b>逐块核对</b><p>按「核对清单」A–E 五类逐项检查：表内勾稽每张表重算、跨章节一致性、指标公式复核、占位符扫描、文字质量。大文件按 ~500 行分块核对。</p></div>
+    <div class="step"><div class="num">4</div><b>源文件自身问题单独报告</b><p>说明书与源文件不一致时先判断谁对（用勾稽关系）。源文件自身矛盾（报表符号异常、补充清单不自洽、审计重述信号）也要报。</p></div>
+    <div class="step"><div class="num">5</div><b>输出报告（按章节定位）</b><p>定位用「第几章第几节」，不要用表号。每条写清：位置（原文短语可 Ctrl+F）+ 问题 + 应为值 + 证据（源文件名），标【高】【中】【低】。核对无误的章节明确写"未发现错误"。</p></div>
+  </div>
+</section>
+
+<!-- ================= 核对清单 ================= -->
+<section id="checklist">
+  <h2>核对清单（打勾进度自动保存）</h2>
+  <div class="card">
+    <div class="toolbar">
+      <input id="filter" type="search" placeholder="搜索清单项…（如：覆盖倍数 / 重述 / 占位符）">
+      <button id="reset">重置全部打勾</button>
+      <div class="progress"><i id="bar"></i></div>
+      <div class="progress-text" id="ptext">已完成 0 / 24 项</div>
+    </div>
+
+    <div class="group-head"><h3>A. 表内勾稽 —— 每张表重算一遍</h3><span class="tag">核心</span></div>
+    <label class="item"><input type="checkbox" data-k="a1"><span class="txt">资产负债表：每年 <b>资产总计 = 负债总计 + 所有者权益合计</b>（0.01 四舍五入容差内算平）</span></label>
+    <label class="item"><input type="checkbox" data-k="a2"><span class="txt">利润表：营业利润、利润总额、净利润逐级重算；<b>注意减值/损失的符号</b>（损失是减项）</span></label>
+    <label class="item"><input type="checkbox" data-k="a3"><span class="txt">现金流量表：经营+投资+筹资净额 = 现金净增加额；期初+净增加 = 期末；各小计 = 明细和</span></label>
+    <label class="item"><input type="checkbox" data-k="a4"><span class="txt">分布/集中度表：各行合计 = 总计；<b>每个百分比重新算</b>（行/总计）；"前N名合计占比"与明细表逐行加总一致</span></label>
+    <label class="item"><input type="checkbox" data-k="a5"><span class="txt">现金流预测表：逐列独立勾稽（期初沉淀+流入−税费−费用−分配 = 期末沉淀；覆盖倍数 = 可供分配/应付本息）；多年计息天数口径一致</span></label>
+    <label class="item"><input type="checkbox" data-k="a6"><span class="txt">正文引用的任何数字必须能从表内复算出来</span></label>
+
+    <div class="group-head"><h3>B. 跨章节一致性</h3><span class="tag">核心</span></div>
+    <label class="item"><input type="checkbox" data-k="b1"><span class="txt">同一数字多处引用必须一致（增资金额、占比、增长率、余额、名称）</span></label>
+    <label class="item"><input type="checkbox" data-k="b2"><span class="txt">期初数/上年数：利润表"2024年"列 vs 2025年审计报告"上年数"——<b>审计重述后说明书必须更新</b></span></label>
+    <label class="item"><input type="checkbox" data-k="b3"><span class="txt">术语全文统一：差额补足承诺函 vs 差额支付承诺函、机构全称、报告名称（《年度资产管理报告》vs《资产管理年度报告》）</span></label>
+    <label class="item"><input type="checkbox" data-k="b4"><span class="txt">时点口径："截至2025年末" vs "截至2026年6月末"；"近三年" vs "近三年及一期"（有新数据就必须更新）</span></label>
+
+    <div class="group-head"><h3>C. 指标公式复核</h3><span class="tag">以说明书自身"指标计算说明"口径为准</span></div>
+    <label class="item"><input type="checkbox" data-k="c1"><span class="txt">资产负债率 = 负债 / 资产</span></label>
+    <label class="item"><input type="checkbox" data-k="c2"><span class="txt">流动比率 = 流动资产 / 流动负债</span></label>
+    <label class="item"><input type="checkbox" data-k="c3"><span class="txt">速动比率 = (流动资产 − 存货 − 预付账款 − 待摊费用) / 流动负债</span></label>
+    <label class="item"><input type="checkbox" data-k="c4"><span class="txt">总资产收益率 = 净利润×2 / (年初+年末总资产)；净资产收益率 = 净利润×2 / (年初+年末净资产)</span></label>
+    <label class="item"><input type="checkbox" data-k="c5"><span class="txt">担保放大倍数 = 担保责任余额 / 净资产；增长率 = 本年 / 上年 − 1</span></label>
+    <label class="item"><input type="checkbox" data-k="c6"><span class="txt">要求"计算过程"时：每个指标列出 <b>分子、分母、算式、结果</b> 四行</span></label>
+
+    <div class="group-head"><h3>D. 完整性 / 占位符扫描</h3><span class="tag">批量查找，命中率高</span></div>
+    <label class="item"><input type="checkbox" data-k="d1"><span class="txt">扫：<code>【</code> <code>】</code> <code>截至，</code> <code>截至202年末</code>（缺数字）<code>增至亿元</code> <code>共亿元</code></span></label>
+    <label class="item"><input type="checkbox" data-k="d2"><span class="txt">表格整行/整列空白但正文有引用；缺表题；列头缺年份；单位缺失</span></label>
+    <label class="item"><input type="checkbox" data-k="d3"><span class="txt">系列编号缺失（分配顺序缺"(1)"、分析小节缺(2)-(6)）</span></label>
+    <label class="item"><input type="checkbox" data-k="d4"><span class="txt">正则速查：<code>【[\s\S]*?】</code> <code>截至[，,]</code> <code>截至20\d\d年末</code> <code>增至\d*亿元</code> <code>共\d*亿元</code></span></label>
+
+    <div class="group-head"><h3>E. 文字质量</h3></div>
+    <label class="item"><input type="checkbox" data-k="e1"><span class="txt">数字粘连（一串数字之间缺顿号/分隔符，财务节重灾区）</span></label>
+    <label class="item"><input type="checkbox" data-k="e2"><span class="txt">错别字/多字/漏字：届止→届至、附属担益→附属担保权益、个入→个人、实验区→试验区</span></label>
+    <label class="item"><input type="checkbox" data-k="e3"><span class="txt">百分比 vs 倍数（"3.12%" vs "3.12倍"）；多字（"主要负债主要为"、"2023年年至"）</span></label>
+    <label class="item"><input type="checkbox" data-k="e4"><span class="txt">标点：缺书名号、缺分号、段首残留"，"、连续句号</span></label>
+  </div>
+</section>
+
+<!-- ================= 关键坑 ================= -->
+<section id="pitfalls">
+  <h2>关键坑（实测踩过）</h2>
+  <details open>
+    <summary>数据抽取类</summary>
+    <div class="body"><ul>
+      <li><b>Excel 列映射先侦察再取值</b>：利润表"本年累计"可能在 D 列（E 列读到 0）；资产负债表资产在 C/D 列、负债权益在 G/H 列；审计版 Excel 有"合并调整"列和多家子公司列，发债口径可能在 J/T 列——maxcols 给足 21，先把「坐标=值」全部 dump 出来看结构。</li>
+      <li><b>openpyxl 必须 data_only=True</b>；取到 None 说明公式无缓存值，用 Excel 打开另存一次。</li>
+      <li><b>PDF 扫描件无文本层</b>：审计报告正表页常是扫描图。对策：找同名数字版 Excel（"XX版本半年报202606.xlsx"），审计 PDF 只看附注页（有文本）。</li>
+      <li><b>docx 合并单元格</b>：row.cells 会重复同一格，用 row._tr.findall(qn('w:tc')) 遍历。</li>
+      <li><b>大文件分块主循环自己核</b>，不要依赖并行 agent（实测 4/6 因账户 402 失败）。</li>
+    </ul></div>
+  </details>
+  <details>
+    <summary>判定类</summary>
+    <div class="body"><ul>
+      <li><b>审计报告"上年数"已重述</b>：典型错误是说明书 2024 净利润写 894.25 万，审计上年数是 1,634.19 万（所得税从 441.53 万调成 −298.40 万）——说明书没跟着重述。</li>
+      <li><b>区分容差和真错</b>：0.01/0.84 万是四舍五入容差；差 2,266,472 元（剩余账期两行合计≠总计）是真错。</li>
+      <li><b>单位混用</b>：元/万元/亿元混排，汇总前统一；"17,40"这类缺位（应为 1,740.00）只在重算合计时才能发现。</li>
+      <li><b>担保公司特有科目</b>：担保赔偿准备金/未到期责任准备在销售费用与预计负债；应收代偿款账面余额−减值=账面价值；信用减值损失正负号要与营业利润公式对一遍。</li>
+      <li><b>现金流预测表"表内数值无法复算"</b>（覆盖倍数 1.04375 用表内数算不出来）是典型模型错误，必须逐列重算，不能只看合计。</li>
+    </ul></div>
+  </details>
+</section>
+
+<!-- ================= 报告模板 ================= -->
+<section id="template">
+  <h2>输出报告格式模板</h2>
+  <div class="card">
+    <p style="margin-bottom:10px; font-size:14px;">定位用"第几章第几节"，<b>不要用表号</b>。每条写清"说明书写的是什么 / 源文件是什么 / 哪个对、应改为多少"。核对无误的章节也明确说"未发现错误"。</p>
+    <div class="codeblock"># 全文问题清单（按章节定位）
+## 第X章 标题
+### X.X 节名
+- 位置描述（引用原文短语，便于 Word 里 Ctrl+F）+ 问题 + 应为值 + 证据（源文件名）
+【高】勾稽不平 / 数据矛盾 / 重述未更新 / 被引用的空表
+【中】占位符、文字错误、术语/口径不一致
+【低】标点、格式
+
+## 附：源文件自身的问题<button class="copybtn">复制</button></div>
+    <div style="margin-top:12px; font-size:13.5px; color:var(--sub);">
+      示例写法：<span class="sev sev-high">高</span>5.1.2「截至2026年6月30日…实收资本为人民币20,077.32万元」与同章财务报表表（2026年6月末列 21,185.32 万元）矛盾 → 应改为 21,185.32 万元（证据：说明书 5.1 资产负债表 T#16 实收资本行）
+    </div>
+  </div>
+</section>
+
+<!-- ================= 参考案例 ================= -->
+<section id="cases">
+  <h2>参考案例（苏丰1期，实测成果）</h2>
+  <div class="card" style="padding:0; overflow:auto;">
+    <table>
+      <tr><th style="width:52px;">级别</th><th style="width:210px;">位置/主题</th><th>发现</th></tr>
+      <tr><td><span class="sev sev-high">高</span></td><td>历史沿革</td><td>"货币出资 10 亿元" → 审计附注实收资本本期增加 3.79+3.79+1.90 = <b>9.48 亿</b>；且 2026 上半年再增资 14.09 亿（32.50→46.60 亿）全文未披露</td></tr>
+      <tr><td><span class="sev sev-high">高</span></td><td>利润表 2024 年净利润</td><td>未重述（894.25 万 vs 审计上年数 1,634.19 万）</td></tr>
+      <tr><td><span class="sev sev-high">高</span></td><td>剩余账期分布</td><td>两行合计 982,521,744.82 ≠ 总计 984,788,216.82，差 2,266,472 元</td></tr>
+      <tr><td><span class="sev sev-high">高</span></td><td>前五名债务人占比</td><td>"55.06%"与明细表逐行加总（59.14%）矛盾</td></tr>
+      <tr><td><span class="sev sev-high">高</span></td><td>压力景况分析表</td><td>两行均无法由表内数值复算（沉淀、覆盖倍数全错），且两年计息天数口径不一</td></tr>
+      <tr><td><span class="sev sev-mid">中</span></td><td>5.1.2 担保责任余额</td><td>"占净资产 3.12%" 应为 "3.12 倍"；"委托贷款减值 0 亿" 应为 "0.42 亿"（审计报告计提委贷减值 4,200 万）</td></tr>
+      <tr><td><span class="sev sev-mid">中</span></td><td>5.1.8 前五名欠款方</td><td>名称多"管理"二字；占比"97%以上"应为 96.32%；增长率 159.34% 应为 259.34%</td></tr>
+      <tr><td><span class="sev sev-mid">中</span></td><td>占位符批量</td><td>「截至，」「截至202年末」「【2026】年【4】月【14】日」、授信 100 行空表、净利润率整行空白</td></tr>
+      <tr><td><span class="sev sev-mid">中</span></td><td>源文件问题</td><td>半年报"信用减值损失"正数且被营业利润公式作加项处理（若为损失，净利润应为 −509.24 万而非 +2,192.07 万）</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ================= 常用命令 ================= -->
+<section id="commands">
+  <h2>常用命令（自己抽取文件时用）</h2>
+  <div class="card">
+    <p style="margin-bottom:10px; font-size:14px;">先决条件：<code>pip3 install python-docx openpyxl pdfplumber</code>；脚本位于技能目录 <code>scripts/</code>。</p>
+    <div class="codeblock"># 说明书：段落 [P#] + 表格 ===TABLE#N=== / T#N R#M 行，全文一个文件
+python3 scripts/extract_docx.py "说明书.docx" /tmp/fuch/prospectus.txt
+
+# Excel：每 sheet 输出 坐标=值（repr 保留类型，防 0/空/字符串混淆）
+python3 scripts/extract_xlsx.py "商业保理-2026年06月.xlsx" /tmp/fuch/baoli.txt
+
+# PDF：pdfplumber 取文本层；扫描件页面会输出"无文本层"
+python3 scripts/extract_pdf.py "担保集团2025年审计报.pdf" /tmp/fuch/pdf_audit.txt
+
+# 大文件按 ~500 行分块，逐块核对
+split -l 520 /tmp/fuch/prospectus.txt /tmp/fuch/c<button class="copybtn">复制</button></div>
+  </div>
+</section>
+
+<footer>ABS 募集说明书数据复核 · 手册 + 在线工作台 · 打勾进度/自定义规则保存在本机浏览器 · 自动扫描结果仅供参考，最终判定以人工（或 Claude）复核为准</footer>
+</div>
+
+<script>
+/* ============================================================
+   通用工具
+============================================================ */
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function strip(s){ return String(s).replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>'); }
+function toNum(v){
+  if(v==null || v==='') return null;
+  var s = String(v).trim();
+  if(/^[—–-]+$/.test(s) || s==='/' || s==='' ) return null;
+  var neg = false;
+  if(/^\(.*\)$/.test(s)){ neg = true; s = s.slice(1,-1); }
+  s = s.replace(/[,，\s￥%]/g,'');
+  var n = parseFloat(s);
+  if(isNaN(n)) return null;
+  return neg ? -n : n;
+}
+function fmt(n){
+  if(n==null) return '';
+  var s = Math.abs(n)>=100000000 ? (n/100000000).toFixed(4)+'亿'
+        : Math.abs(n)>=10000 ? (n/10000).toFixed(2)+'万' : String(Math.round(n*100)/100);
+  return s;
+}
+function snapshot(s, len){ s = String(s); return s.length>len ? s.slice(0,len)+'…' : s; }
+
+/* ============================================================
+   文本解析：支持 [P#] / ===TABLE#N=== / T#N R#M 格式与纯文本
+============================================================ */
+function parseTextDoc(name, text){
+  var rawLines = text.split(/\r?\n/);
+  var doc = {name:name, lines:[], tables:{}, chapters:[]};
+  var tid = null;
+  for(var i=0;i<rawLines.length;i++){
+    var raw = rawLines[i];
+    var m;
+    if((m = raw.match(/^===TABLE(\d+)===$/))){
+      tid = 'T'+m[1];
+      doc.tables[tid] = {tid:'T'+m[1], startLine:i+1, rows:[]};
+      doc.lines.push({raw:raw, line:i+1, type:'ttitle', tid:'T'+m[1]});
+    } else if(tid && (m = raw.match(/^T#\d+ R#(\d+)\s*\|(.*)$/))){
+      var cells = m[2].split('|').map(function(c){ return c.trim(); });
+      doc.tables[tid].rows.push({rid:'R'+m[1], cells:cells, line:i+1});
+      doc.lines.push({raw:raw, line:i+1, type:'trow', tid:tid, rid:'R'+m[1], cells:cells});
+    } else {
+      if(tid) tid = null;
+      var p = raw.match(/^\[P(\d+)\]\s*(.*)$/);
+      doc.lines.push({raw:raw, line:i+1, type:'p', pid:p?p[1]:null, text:p?p[2]:raw});
+    }
+  }
+  // 章节映射
+  doc.chapters.push({line:0, title:'封面/正文前'});
+  doc.lines.forEach(function(L){
+    if(L.type!=='p') return;
+    var t = L.text || L.raw;
+    var m2 = t.match(/^(第[一二三四五六七八九十百]+章)\s*(.{0,50})/);
+    if(m2 && m2[2].length>0){ doc.chapters.push({line:L.line, title:m2[1]+' '+m2[2].trim().slice(0,30)}); }
+    else if(/^释义\s*$/.test(t.trim())){ doc.chapters.push({line:L.line, title:'释义'}); }
+  });
+  function chapterOf(lineNo){
+    var ch = doc.chapters[0];
+    for(var i=0;i<doc.chapters.length;i++){ if(doc.chapters[i].line<=lineNo) ch = doc.chapters[i]; else break; }
+    return ch.title;
+  }
+  doc.chapterOf = chapterOf;
+  return doc;
+}
+
+/* docx → HTML（mammoth），再解析成段落+表格 */
+function parseDocxHtml(name, html){
+  var root = new DOMParser().parseFromString(html, 'text/html');
+  var out = [];
+  var pi = 0, ti = 0;
+  function walk(node){
+    node.childNodes.forEach(function(n){
+      var tag = n.nodeName.toLowerCase();
+      if(tag === 'table'){
+        ti++;
+        out.push('===TABLE'+(ti)+'===');
+        Array.prototype.forEach.call(n.querySelectorAll('tr'), function(tr){
+          var cells = Array.prototype.map.call(tr.children, function(td){ return (td.textContent||'').trim().replace(/\s+/g,' '); });
+          out.push('T#'+ti+' R#0 | ' + cells.join(' | '));
+        });
+      } else if(n.nodeType===3){
+        var t = n.textContent.replace(/\s+/g,' ').trim();
+        if(t){ pi++; out.push('[P'+pi+'] '+t); }
+      } else if(['p','h1','h2','h3','h4','h5','h6','li','blockquote'].indexOf(tag)>-1){
+        var t = (n.textContent||'').replace(/\s+/g,' ').trim();
+        if(t){ pi++; out.push('[P'+pi+'] '+t); }
+      } else if(tag==='div' || tag==='body' || tag==='article' || tag==='section'){
+        walk(n);
+      }
+    });
+  }
+  walk(root.body || root);
+  return parseTextDoc(name, out.join('\n'));
+}
+
+/* xlsx → 每 sheet 一个二维表 */
+function parseXlsx(name, wb){
+  var sheets = [];
+  wb.SheetNames.forEach(function(sn){
+    var rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], {header:1, raw:true, defval:''});
+    sheets.push({name: sn, rows: rows});
+  });
+  return {name:name, xlsx:true, sheets:sheets};
+}
+
+/* pdf → 每页文本 + 页码章节映射 */
+function makePdfDoc(name, pages){
+  var doc = {name:name, lines:[], tables:{}, chapters:[{line:0, title:'封面/正文前'}]};
+  var lineNo = 0;
+  pages.forEach(function(pg){
+    var parts = pg.split('\n');
+    var m = parts[0].match(/^===PAGE#(\d+)===$/);
+    if(m) doc.chapters.push({line:lineNo+1, title:'第'+m[1]+'页'});
+    parts.forEach(function(lt){
+      lineNo++;
+      doc.lines.push({raw:lt, line:lineNo, type:'p', pid:null, text:lt});
+    });
+  });
+  doc.chapterOf = function(ln){
+    var ch = doc.chapters[0];
+    for(var i=0;i<doc.chapters.length;i++){ if(doc.chapters[i].line<=ln) ch = doc.chapters[i]; else break; }
+    return ch.title;
+  };
+  return doc;
+}
+
+var tesseractReady = null;
+function loadTesseract(){
+  if(tesseractReady) return tesseractReady;
+  tesseractReady = new Promise(function(res, rej){
+    loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js',
+      function(){ res(); },
+      function(){ rej(new Error('OCR 库加载失败（需联网）')); });
+  });
+  return tesseractReady;
+}
+
+function extractPdf(name, pdf){
+  return (async function(){
+    var status = $('wsStatus');
+    var pages = [], scanned = [];
+    for(var p=1;p<=pdf.numPages;p++){
+      status.textContent = '提取 PDF 文本 '+p+'/'+pdf.numPages+' 页…';
+      var page = await pdf.getPage(p);
+      var tc = await page.getTextContent();
+      var txt = '';
+      tc.items.forEach(function(it){ txt += it.str + (it.hasEOL ? '\n' : ' '); });
+      if(txt.replace(/\s/g,'').length < 30) scanned.push({num:p, page:page});
+      pages.push('===PAGE#'+p+'===\n'+txt);
+    }
+    if(scanned.length && $('wsOcr').checked){
+      await loadTesseract();
+      status.textContent = '加载 OCR 识别数据（首次约 30MB，请稍候）…';
+      var worker = await Tesseract.createWorker('chi_sim+eng', 1, {logger:function(m){
+        if(m.status==='recognizing text') status.textContent = 'OCR 识别中… '+Math.round((m.progress||0)*100)+'%';
+      }});
+      var maxV = parseInt($('wsOcrMax').value, 10);
+      var n = (isNaN(maxV) || maxV<=0) ? scanned.length : Math.min(scanned.length, maxV);
+      for(var i=0;i<n;i++){
+        status.textContent = 'OCR 识别第 '+scanned[i].num+' 页（共 '+scanned.length+' 页扫描件'+(n<scanned.length?'，本次识别前 '+n+' 页':'')+'）…';
+        var pg = scanned[i].page;
+        var vp = pg.getViewport({scale:2});
+        var canvas = document.createElement('canvas');
+        canvas.width = vp.width; canvas.height = vp.height;
+        await pg.render({canvasContext: canvas.getContext('2d'), viewport: vp}).promise;
+        var r = await worker.recognize(canvas);
+        pages[scanned[i].num-1] = '===PAGE#'+scanned[i].num+'===\n（OCR识别，可能有错字）\n'+(r.data.text||'');
+      }
+      await worker.terminate();
+      if(n < scanned.length) status.textContent = name+': 仅 OCR 前 '+n+' 页扫描件，其余页请人工查看或调大上限重新上传';
+    } else if(scanned.length){
+      status.textContent = name+': 有 '+scanned.length+' 页为扫描件（无文本层），勾选"PDF 扫描件页启用 OCR"后重新上传可识别';
+    }
+    return makePdfDoc(name, pages);
+  })();
+}
+
+/* ============================================================
+   勾稽检查
+============================================================ */
+function numCols(rows){
+  var n = 1;
+  rows.forEach(function(r){ if(r.length>n) n = r.length; });
+  var cols = [];
+  for(var c=1;c<n;c++){
+    var cnt=0;
+    rows.forEach(function(r){ if(toNum(r[c])!=null) cnt++; });
+    if(cnt>=2) cols.push(c);
+  }
+  return cols;
+}
+function rowVal(rows, labelRe, c){
+  for(var i=0;i<rows.length;i++){
+    var lab = String(rows[i][0]||'').replace(/\s+/g,'');
+    if(labelRe.test(lab)) return {idx:i, v:toNum(rows[i][c])};
+  }
+  return null;
+}
+var REL_TOL = 0.0015; // 相对容差 0.15%
+
+function checkTableGouji(srcLabel, rows, findings, doc, locLabel){
+  var cols = numCols(rows);
+  if(!cols.length) return;
+  cols.forEach(function(c){
+    var L = function(re){ return rowVal(rows, re, c); };
+    var zong   = L(/^资产总计$|^资产合计$|^总资产$/);
+    var liud   = L(/^流动资产合计$/);
+    var fei    = L(/^非流动资产合计$/);
+    var fz     = L(/^负债合计$|^负债总计$/);
+    var liufz  = L(/^流动负债合计$/);
+    var feifz  = L(/^非流动负债合计$/);
+    var qy     = null;
+    for(var i=0;i<rows.length;i++){
+      var lab = String(rows[i][0]||'').replace(/\s+/g,'');
+      if(/合计$/.test(lab) && /所有者权益|股东权益|净资产/.test(lab) && !/归属于|少数股东/.test(lab)){ qy = {idx:i, v:toNum(rows[i][c])}; break; }
+    }
+    function check(desc, x, y){
+      if(x==null || y==null) return;
+      var diff = Math.abs(x-y), rel = diff/Math.max(1,Math.abs(y));
+      if(rel > REL_TOL){
+        findings.push({cat:'gouji', level:'高', doc:doc.name, loc:locLabel+'(第'+(c+1)+'列)',
+          quote:desc, note:desc+'：左边='+fmt(x)+'，右边='+fmt(y)+'，差额='+fmt(diff)+'（超出容差，请复核）'});
+      }
+    }
+    if(zong && liud && fei) check('资产总计=流动资产合计+非流动资产合计', zong.v, liud.v+fei.v);
+    if(zong && fz && qy)   check('资产总计=负债合计+所有者权益合计', zong.v, fz.v+qy.v);
+    if(fz && liufz && feifz) check('负债合计=流动负债合计+非流动负债合计', fz.v, liufz.v+feifz.v);
+
+    var jy  = L(/^经营活动(产生的)?现金流量净额$/);
+    var tz  = L(/^投资活动(产生的)?现金流量净额$/);
+    var cz  = L(/^筹资活动(产生的)?现金流量净额$/);
+    var hl  = L(/^汇率变动对现金(及现金等价物)?的影响$/);
+    var jia = L(/^现金及现金等价物净增加额$/);
+    var qi  = L(/^(期初|年初)现金及现金等价物余额$/);
+    var mo  = L(/^(期末|年末)现金及现金等价物余额$/);
+    if(jy && tz && cz && jia){
+      var sum3 = jy.v+tz.v+cz.v;
+      var sum4 = hl ? sum3+hl.v : null;
+      var ok3 = Math.abs(sum3-jia.v)/Math.max(1,Math.abs(jia.v)) <= REL_TOL;
+      var ok4 = sum4!=null && Math.abs(sum4-jia.v)/Math.max(1,Math.abs(jia.v)) <= REL_TOL;
+      if(!ok3 && !ok4){
+        findings.push({cat:'gouji', level:'高', doc:doc.name, loc:locLabel+'(第'+(c+1)+'列)',
+          quote:'经营+投资+筹资净额', note:'三净额合计='+fmt(sum3)+(hl?('（含汇率影响='+fmt(sum4)+'）'):'')+'，现金净增加额='+fmt(jia.v)+'，不平（请复核）'});
+      }
+      if(qi && mo){
+        var end = qi.v+jia.v;
+        if(Math.abs(end-mo.v)/Math.max(1,Math.abs(mo.v)) > REL_TOL){
+          findings.push({cat:'gouji', level:'高', doc:doc.name, loc:locLabel+'(第'+(c+1)+'列)',
+            quote:'期初+净增加=期末', note:'期初'+fmt(qi.v)+'+净增加'+fmt(jia.v)+'='+fmt(end)+'，期末='+fmt(mo.v)+'，不平（请复核）'});
+        }
+      }
+    }
+  });
+}
+
+/* ============================================================
+   扫描规则
+============================================================ */
+var PH_PATTERNS = [
+  {re:/【[^】\n]{0,60}】/g,  name:'【】占位符',      level:'中', note:'方括号占位内容未填写'},
+  {re:/截至[，,]|截至\s*[，,]/g, name:'截至后缺时点',   level:'高', note:'"截至"后缺日期/数字'},
+  {re:/截至202年末/g,        name:'年份缺位',          level:'高', note:'年份缺位（如"截至202年末"，应为4位年份）'},
+  {re:/(增至|达到|共)亿元/g,   name:'金额缺位',          level:'高', note:'亿元前缺数字'}
+];
+var TYPO_PAIRS_DEFAULT = [
+  ['届止','届至'],['附属担益','附属担保权益'],['实验区','试验区'],['的的','的'],
+  ['即对即对','即对'],['于相关各方','与相关各方'],['再过往','在过往'],
+  ['主要负债主要为','主要负债为'],['年年至','年至'],['个入','个人']
+];
+var TERM_PAIRS_DEFAULT = [
+  ['《资产买卖协议》','《基础资产买卖协议》'],
+  ['《质押协议》','《质押合同》'],
+  ['《托管合同》','《托管协议》'],
+  ['《服务协议》','《资产服务协议》'],
+  ['差额补足承诺函','差额支付承诺函'],
+  ['募集资金专户','专项计划募集专用账户'],
+  ['《年度资产管理报告》','《资产管理年度报告》'],
+  ['中国证券登记结算有限公司','中国证券登记结算有限责任公司']
+];
+function loadPairs(key, def){
+  try{ var v = JSON.parse(localStorage.getItem(key)); return Array.isArray(v)?v:def; }catch(e){ return def; }
+}
+
+/* 文本类扫描 */
+function scanTextDoc(doc, opts, findings, typoPairs, termPairs){
+  var i, L, t;
+  function loc(L){
+    var ch = doc.chapterOf(L.line);
+    return (L.type==='trow') ? ('表'+L.tid+' '+L.rid+'（行'+L.line+'，'+ch+'）') : ('行'+L.line+'（'+ch+'）');
+  }
+  function push(cat, level, ln, quote, note){
+    findings.push({cat:cat, level:level, doc:doc.name, loc:loc(ln), quote:quote, note:note});
+  }
+  var MAX = 60, counts = {};
+  for(i=0;i<doc.lines.length;i++){
+    L = doc.lines[i]; t = L.raw;
+    if(opts.ph){
+      PH_PATTERNS.forEach(function(p){
+        p.re.lastIndex = 0;
+        var m, n=0;
+        while((m = p.re.exec(t))){
+          n++;
+          if((counts[p.name]=(counts[p.name]||0)+1) <= MAX) push('ph', p.level, L, snapshot(m[0],50), p.note);
+        }
+      });
+    }
+    if(opts.typo && L.type==='p'){
+      typoPairs.forEach(function(pr){
+        if(pr[0] && pr[1] && t.indexOf(pr[0])>-1){
+          var idx = t.indexOf(pr[0]);
+          push('typo','中', L, snapshot(t.slice(Math.max(0,idx-15), idx+pr[0].length+15),60), '疑似错别字：「'+pr[0]+'」应为「'+pr[1]+'」');
+        }
+      });
+      [['，','，'],['。','。'],['、','、'],['；','；']].forEach(function(p){
+        var re = new RegExp('['+p[0]+']{2,}','g'); re.lastIndex=0; var m;
+        while((m=re.exec(t))) push('typo','低', L, snapshot(m[0],20), '连续'+p[1]+'重复');
+      });
+      var dm = t.match(/[\d,]+\.?\d*/g);
+      if(dm){
+        dm.forEach(function(numStr){
+          if(numStr.replace(/[,.]/g,'').length>=8 && numStr.indexOf(',')<0)
+            push('typo','低', L, numStr, '数字粘连（≥8位无千分位分隔），请核对是否缺逗号/顿号');
+        });
+      }
+      if(t.indexOf('供热')>-1 && t.indexOf('供水')>-1) push('typo','低', L, '供热/供水', '同一段同时出现"供热""供水"，请确认项目收费类型是否笔误');
+    }
+    if(opts.term && L.type==='p'){
+      termPairs.forEach(function(pr){
+        if(t.indexOf(pr[0])>-1) push('term','低', L, snapshot(pr[0],50), '出现变体「'+pr[0]+'」，是否应统一为「'+pr[1]+'」');
+      });
+    }
+  }
+  if(opts.term){
+    termPairs.forEach(function(pr){
+      var a=0, b=0;
+      doc.lines.forEach(function(L2){ if(L2.type==='p'){ var tt=L2.raw; if(tt.indexOf(pr[0])>-1)a++; if(tt.indexOf(pr[1])>-1)b++; } });
+      if(a>0 && b>0) findings.push({cat:'term', level:'中', doc:doc.name, loc:'全文', quote:pr[0]+' vs '+pr[1],
+        note:'两种变体并存（'+a+'处 / '+b+'处），请统一为「'+pr[1]+'」'});
+    });
+  }
+}
+
+/* ============================================================
+   运行扫描
+============================================================ */
+var lastReport = '';
+function runScan(){
+  var box = $('wsResults');
+  var status = $('wsStatus');
+  status.textContent = '扫描中…';
+  setTimeout(function(){
+    try{
+      var opts = {ph:false, typo:false, gouji:false, term:false};
+      document.querySelectorAll('input[data-scan]').forEach(function(cb){ opts[cb.dataset.scan] = cb.checked; });
+      var typoPairs = loadPairs('ard-typo-pairs', TYPO_PAIRS_DEFAULT);
+      var termPairs = loadPairs('ard-term-pairs', TERM_PAIRS_DEFAULT);
+      var findings = [];
+      var docs = [];
+      var txt = $('wsText').value;
+      if(txt.trim()) docs.push(parseTextDoc('粘贴文本', txt));
+      uploads.forEach(function(u){ docs.push(u); });
+      docs.forEach(function(doc){
+        if(doc.xlsx){
+          if(opts.gouji){
+            doc.sheets.forEach(function(sh){
+              checkTableGouji('表 '+sh.name, sh.rows, findings, doc, doc.name+' · sheet「'+sh.name+'」');
+            });
+          }
+        } else {
+          scanTextDoc(doc, opts, findings, typoPairs, termPairs);
+          if(opts.gouji){
+            for(var k in doc.tables){ checkTableGouji('表'+doc.tables[k].tid, doc.tables[k].rows, findings, doc, doc.name+' · 表'+doc.tables[k].tid); }
+          }
+        }
+      });
+      renderResults(findings, docs.length);
+      status.textContent = '完成：共 '+findings.length+' 条（'+docs.length+' 个文档）';
+    }catch(err){
+      status.textContent = '出错了：'+err.message;
+      console.error(err);
+    }
+  }, 30);
+}
+
+function renderResults(findings, docCount){
+  var box = $('wsResults');
+  var groups = {gouji:'表内勾稽', ph:'占位符', typo:'文字质量', term:'术语一致性'};
+  var levelName = {高:'sev-high', 中:'sev-mid', 低:'sev-low'};
+  var cats = ['gouji','ph','typo','term'];
+  var html = '';
+  var total = 0;
+  cats.forEach(function(cat){
+    var list = findings.filter(function(f){ return f.cat===cat; });
+    total += list.length;
+    var head = groups[cat] + '（'+list.length+' 条）';
+    if(!list.length){ html += '<details class="fgroup"><summary>'+head+'</summary><div class="empty">未发现问题 ✓</div></details>'; return; }
+    html += '<details class="fgroup" open><summary>'+head+'</summary>';
+    list.slice(0,300).forEach(function(f){
+      html += '<div class="finding"><span class="sev '+levelName[f.level]+'">'+f.level+'</span>'
+        + '<span class="loc">'+esc(f.loc)+'</span><span>'+esc(f.note)+' <span class="quote">'+esc(f.quote)+'</span></span></div>';
+    });
+    if(list.length>300) html += '<div class="empty">…另有 '+(list.length-300)+' 条未显示（请导出完整报告）</div>';
+    html += '</details>';
+  });
+  var headTxt = docCount ? ('共扫描 '+docCount+' 个文档，发现 '+total+' 条疑似问题') : '请先粘贴文本或上传文件';
+  box.innerHTML = '<div class="stat-chips">'+cats.map(function(c){
+    var n = findings.filter(function(f){ return f.cat===c; }).length;
+    return '<span class="chip">'+groups[c]+'：<b>'+n+'</b></span>';
+  }).join('')+'</div>' + html;
+  lastReport = buildReport(findings);
+}
+
+function buildReport(findings){
+  var groups = {gouji:'表内勾稽', ph:'占位符', typo:'文字质量', term:'术语一致性'};
+  var cats = ['gouji','ph','typo','term'];
+  var lines = ['# ABS 说明书自动扫描报告', '', '> 由网页工作台机械扫描生成，仅供初筛；最终判定请结合源文件人工复核或交由 Claude 深核。', ''];
+  cats.forEach(function(cat){
+    var list = findings.filter(function(f){ return f.cat===cat; });
+    lines.push('## '+groups[cat]+'（'+list.length+' 条）');
+    if(!list.length){ lines.push('未发现问题 ✓', ''); return; }
+    list.forEach(function(f){
+      lines.push('- 【'+f.level+'】'+strip(f.loc)+'「'+strip(f.quote)+'」→ '+strip(f.note));
+    });
+    lines.push('');
+  });
+  lines.push('---', '扫描规则：占位符正则/错别字词典/术语变体对照 + 资产负债表、现金流量表勾稽（相对容差 0.15%）。');
+  return lines.join('\n');
+}
+
+function copyText(text, btn, okText){
+  function flash(){ var old = btn.textContent; btn.textContent = okText||'已复制 ✓'; setTimeout(function(){ btn.textContent = old; }, 1500); }
+  function fallback(){
+    var ta = document.createElement('textarea'); ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); flash(); }catch(e){ alert('复制失败，请手动复制'); }
+    document.body.removeChild(ta);
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(flash, fallback); }
+  else fallback();
+}
+
+/* ============================================================
+   文件上传（.txt / .docx / .xlsx）
+============================================================ */
+var uploads = [];
+function loadScript(src, onok, onerr){
+  var s = document.createElement('script');
+  s.src = src;
+  s.onload = onok; s.onerror = onerr || function(){};
+  document.head.appendChild(s);
+}
+$('wsFile').addEventListener('change', function(ev){
+  var files = Array.prototype.slice.call(ev.target.files);
+  var status = $('wsStatus');
+  status.textContent = '正在读取 '+files.length+' 个文件…';
+  var pending = files.length;
+  function done(){ pending--; if(pending===0){ status.textContent = '读取完成，点击"运行扫描"'; } }
+  files.forEach(function(f){
+    var reader = new FileReader();
+    reader.onload = function(){
+      var name = f.name, data = reader.result;
+      try{
+        if(/\.txt$/i.test(name)){
+          var text = new TextDecoder('utf-8').decode(data);
+          if($('wsText').value.trim()) $('wsText').value += '\n\n===FILE:'+name+'===\n'+text;
+          else $('wsText').value = text;
+          done();
+        } else if(/\.docx$/i.test(name)){
+          loadScript('https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js', function(){
+            mammoth.convertToHtml({arrayBuffer:data}).then(function(res){
+              uploads.push(parseDocxHtml(name, res.value));
+              done();
+            }).catch(function(){ status.textContent = name+' 解析失败'; done(); });
+          }, function(){ status.textContent = 'docx 解析库加载失败（需联网），请改用 python 脚本抽取后粘贴 txt'; done(); });
+        } else if(/\.xlsx$/i.test(name)){
+          loadScript('https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js', function(){
+            var wb = XLSX.read(new Uint8Array(data), {type:'array'});
+            uploads.push(parseXlsx(name, wb));
+            done();
+          }, function(){ status.textContent = 'xlsx 解析库加载失败（需联网），请改用 python 脚本抽取后粘贴'; done(); });
+        } else if(/\.pdf$/i.test(name)){
+          loadScript('https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js', function(){
+            try{
+              pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+              pdfjsLib.getDocument({data:new Uint8Array(data)}).promise.then(function(pdf){
+                extractPdf(name, pdf).then(function(doc){
+                  uploads.push(doc);
+                  done();
+                }).catch(function(err){ status.textContent = name+' 解析失败：'+err.message; done(); });
+              }).catch(function(err){ status.textContent = name+' 无法打开（可能已加密或损坏）：'+err.message; done(); });
+            }catch(err){ status.textContent = name+' 解析失败：'+err.message; done(); }
+          }, function(){ status.textContent = 'PDF 解析库加载失败（需联网）'; done(); });
+        } else { status.textContent = '不支持的文件类型：'+name; done(); }
+      }catch(err){ status.textContent = name+' 读取失败：'+err.message; done(); }
+    };
+    reader.readAsArrayBuffer(f);
+  });
+  ev.target.value = '';
+});
+
+/* 示例数据 */
+$('wsSample').addEventListener('click', function(e){
+  e.preventDefault();
+  $('wsText').value = [
+    '第一章 当事人的权利和义务',
+    '[P1] 原始权益人为高宏产投，联系电话021-80295888。',
+    '[P2] 本专项计划截至2026年6月末设立，担保人主体信用等级为AAA级。',
+    '[P3] 原始权益人实收资本截至202年末为增至亿元。',
+    '===TABLE1===',
+    'T#1 R#1 | 项目 | 2026年6月末 | 2025年末',
+    'T#1 R#2 | 流动资产合计 | 664,873.93 | 584,813.11',
+    'T#1 R#3 | 非流动资产合计 | 1,508,511.62 | 1,391,537.03',
+    'T#1 R#4 | 资产总计 | 2,173,385.55 | 1,976,350.13',
+    'T#1 R#5 | 流动负债合计 | 558,514.27 | 404,497.01',
+    'T#1 R#6 | 非流动负债合计 | 707,717.96 | 645,541.94',
+    'T#1 R#7 | 负债合计 | 1,266,232.23 | 1,050,038.95',
+    'T#1 R#8 | 所有者权益合计 | 907,153.32 | 926,311.18',
+    '===TABLE2===',
+    'T#2 R#1 | 项目 | 2026年1-6月',
+    'T#2 R#2 | 经营活动产生的现金流量净额 | 5,000.00',
+    'T#2 R#3 | 投资活动产生的现金流量净额 | -2,000.00',
+    'T#2 R#4 | 筹资活动产生的现金流量净额 | -1,000.00',
+    'T#2 R#5 | 现金及现金等价物净增加额 | 2,100.00',
+    'T#2 R#6 | 期初现金及现金等价物余额 | 10,000.00',
+    'T#2 R#7 | 期末现金及现金等价物余额 | 12,000.00',
+    '[P4] 初始权益人根据《质押协议》将供水收费权质押，供热标准为居民1.5元/立方米。',
+    '[P5] 次级证券除非根据生效判决或裁定或计划管理人事先的书面同意不得转让的的。'
+  ].join('\n');
+});
+$('wsClear').addEventListener('click', function(e){ e.preventDefault(); $('wsText').value=''; uploads=[]; $('wsResults').innerHTML=''; lastReport=''; $('wsStatus').textContent=''; });
+
+/* 运行与导出 */
+$('wsRun').addEventListener('click', runScan);
+$('wsExport').addEventListener('click', function(){
+  if(!lastReport){ alert('请先运行扫描'); return; }
+  copyText(lastReport, this, '已复制 ✓');
+});
+$('wsDownload').addEventListener('click', function(){
+  if(!lastReport){ alert('请先运行扫描'); return; }
+  var blob = new Blob(['﻿'+lastReport], {type:'text/markdown;charset=utf-8'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'ABS自动扫描报告.md';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+$('wsClaude').addEventListener('click', function(){
+  if(!lastReport){ alert('请先运行扫描'); return; }
+  var prompt = '请复核以下 ABS 说明书（我已用网页工具做了机械扫描，结果可能有误报，请结合源文件逐条核实）：\n\n'
+    + lastReport
+    + '\n\n请按以下格式输出最终问题清单：按「第几章第几节」定位、引用原文短语（便于 Ctrl+F）、给出问题与应为值、标注证据来源、每条标【高】【中】【低】；核对无误的章节明确写"未发现错误"；并指出上述扫描结果中哪些经复核不成立。';
+  copyText(prompt, this, '提示词已复制 ✓');
+});
+
+/* 自定义错别字 */
+function renderCust(){
+  var pairs = loadPairs('ard-typo-pairs', TYPO_PAIRS_DEFAULT);
+  $('custList').textContent = '已添加：'+pairs.map(function(p){ return p[0]+'→'+p[1]; }).join('、');
+}
+$('custAdd').addEventListener('click', function(){
+  var w = $('custWrong').value.trim(), r = $('custRight').value.trim();
+  if(!w || !r){ alert('请同时填写"错"和"对"'); return; }
+  var pairs = loadPairs('ard-typo-pairs', TYPO_PAIRS_DEFAULT);
+  pairs.push([w, r]);
+  localStorage.setItem('ard-typo-pairs', JSON.stringify(pairs));
+  $('custWrong').value=''; $('custRight').value='';
+  renderCust();
+});
+renderCust();
+
+/* ============================================================
+   手册部分：打勾清单
+============================================================ */
+(function(){
+  var STORE_KEY = 'abs-review-checklist-v1';
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('.item input[data-k]'));
+  var total = boxes.length;
+  function saved(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; }catch(e){ return {}; } }
+  function applyChecked(){ var s = saved(); boxes.forEach(function(b){ b.checked = !!s[b.dataset.k]; }); }
+  function refresh(){
+    var n = 0;
+    boxes.forEach(function(b){
+      b.closest('.item').classList.toggle('done', b.checked);
+      if(b.checked) n++;
+    });
+    var pct = total ? Math.round(n/total*100) : 0;
+    $('bar').style.width = pct + '%';
+    $('ptext').textContent = '已完成 ' + n + ' / ' + total + ' 项（' + pct + '%）';
+  }
+  boxes.forEach(function(b){
+    b.addEventListener('change', function(){
+      var s = saved();
+      s[b.dataset.k] = b.checked;
+      localStorage.setItem(STORE_KEY, JSON.stringify(s));
+      refresh();
+    });
+  });
+  $('reset').addEventListener('click', function(){ localStorage.removeItem(STORE_KEY); applyChecked(); refresh(); });
+  $('filter').addEventListener('input', function(){
+    var q = this.value.trim().toLowerCase();
+    boxes.forEach(function(b){
+      var item = b.closest('.item');
+      item.classList.toggle('hide', !(!q || item.textContent.toLowerCase().indexOf(q) > -1));
+    });
+  });
+  applyChecked(); refresh();
+})();
+
+/* 通用复制按钮（手册部分） */
+document.querySelectorAll('.copybtn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var block = btn.closest('.codeblock');
+    var text = block.textContent.replace(/复制已复制 ✓$/, '').trim();
+    copyText(text, btn);
+  });
+});
+</script>
+</body>
+</html>
